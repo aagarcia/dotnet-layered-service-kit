@@ -1,0 +1,24 @@
+name: Rule proposal or production pitfall
+description: Propose a new rule, a change to an existing one, or a pitfall for the catalog.
+labels: [proposal]
+body:
+  - type: textarea
+    id: rule
+    attributes:
+      label: Rule or pitfall
+      description: State it in one or two sentences.
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: Every rule in the kit states its reason. What goes wrong without it? For a pitfall, give symptom → cause → fix.
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Example
+      description: A short C# snippet or scenario, ideally in the Orders example domain.
+      render: csharp

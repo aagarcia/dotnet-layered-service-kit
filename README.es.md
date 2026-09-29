@@ -15,6 +15,11 @@ producción.
 
 [English →](README.md)
 
+> **Estado: temprano, abierto a colaboración.** Es un proyecto comunitario en desarrollo activo. **No**
+> está publicado en el directorio oficial de plugins de Claude; se instala directamente desde este
+> repositorio. Se agradece cualquier comentario sobre las reglas, las plantillas y el catálogo de
+> pitfalls — abre un issue o una discusión.
+
 ## Qué es
 
 Un **service** aquí significa una API HTTP: una solución con cuatro proyectos, una sola dirección de

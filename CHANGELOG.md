@@ -7,6 +7,10 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Issue templates, pull request template and a collaboration status note in the READMEs.
+
 ### Planned
 
 - Worker standard (queue consumers and `BackgroundService` processing), as a separate plugin.

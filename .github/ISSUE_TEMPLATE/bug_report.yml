@@ -1,0 +1,41 @@
+name: Problem with a rule, reference or template
+description: Something in the kit is wrong, outdated, does not build, or leads the agent astray.
+labels: [bug]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Skill (SKILL.md), Reference file, Template, Reviewer agent, Plugin / marketplace manifest, README / docs]
+    validations:
+      required: true
+  - type: dropdown
+    id: language
+    attributes:
+      label: Plugin
+      options: [layered-service (EN), layered-service-es (ES), Both]
+    validations:
+      required: true
+  - type: input
+    id: file
+    attributes:
+      label: File
+      placeholder: references/04-persistence-efcore.md
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What the kit says, or what the agent generated following it.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      placeholder: .NET SDK version, Claude Code version, OS

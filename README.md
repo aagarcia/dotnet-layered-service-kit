@@ -14,6 +14,11 @@ symptom → cause → fix catalog of problems that only show up in production.
 
 [Español →](README.es.md)
 
+> **Status: early, open for collaboration.** This is a community project in active development. It is
+> **not** listed in the official Claude plugin directory; you install it straight from this repository.
+> Feedback on the rules, the templates and the pitfalls catalog is very welcome — open an issue or
+> start a discussion.
+
 ## What it is
 
 A **service** here means one HTTP API: a solution with four projects, one dependency direction, and a
