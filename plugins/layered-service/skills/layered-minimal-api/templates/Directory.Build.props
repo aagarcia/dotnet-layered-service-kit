@@ -1,0 +1,46 @@
+<!--
+  Copy to the repository root. Applies to every project under it, src and tests alike.
+  Template: replace the analyzer version with the latest stable, and check NuGet for the rest.
+-->
+<Project>
+
+  <PropertyGroup>
+    <LangVersion>14</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <!-- .editorconfig rules also apply to `dotnet build`, so IDE0005 (unused using) fails the build.
+       IDE0005 is only reported during build when the XML documentation file is generated; CS1591
+       (public member without an XML comment) is silenced because requiring XML docs on every
+       public member is not a rule of this standard.
+       Cleanup: run `dotnet format style` scoped to the IDE0005 diagnostic. (A double dash cannot
+       appear inside an XML comment, which is why the command is written without its flag here.) -->
+  <PropertyGroup>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!-- Static analysis in every project of the repository, src and tests. One version, bumped here.
+       `0.0.0-PLACEHOLDER` is a placeholder, not a version: replace it with the current stable release
+       (check NuGet) before the first restore. It IS well-formed semver - 0.0.0 with the pre-release tag
+       PLACEHOLDER - but no such version is published, so restore fails with NU1102 (unable to find the
+       package) if you forget to replace it. That is the point: a loud failure beats a silently unpinned
+       analyzer. It also keeps this file valid XML; a literal such as `Version="<latest-stable>"` would
+       put a raw `<` inside an attribute value. -->
+  <ItemGroup>
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="0.0.0-PLACEHOLDER">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Each project keeps the same version with an Update instead of a second Include, so the
+       analyzer version lives in exactly one place:
+  <ItemGroup>
+    <PackageReference Update="SonarAnalyzer.CSharp" Version="0.0.0-PLACEHOLDER" />
+  </ItemGroup>
+  -->
+
+</Project>

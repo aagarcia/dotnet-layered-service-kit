@@ -1,0 +1,9 @@
+root = true
+
+[*.cs]
+# Unused using: a warning in the IDE *and* in `dotnet build` (EnforceCodeStyleInBuild in
+# Directory.Build.props). Automatic cleanup: dotnet format style --diagnostics IDE0005
+#
+# Keep this file small and enforced. An .editorconfig nobody reads, with forty severities set
+# to "suggestion", is worse than a single rule that actually fails the build.
+dotnet_diagnostic.IDE0005.severity = warning

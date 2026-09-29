@@ -1,0 +1,121 @@
+# CLAUDE.md — <Company>.<Product>
+
+This file orients an agent or a new developer in under two minutes about what this service is, how to
+build it, the non-obvious decisions, and the conventions that hold the layers together.
+
+## What this is
+
+`<Company>.<Product>` is an HTTP service built with .NET 10 and the "thin I/O shell + testable logic"
+pattern, with four layers:
+
+- `src/<Company>.<Product>.Domain` — POCO models, enums, and telemetry instruments (`Meter` and
+  `ActivitySource`). No `ProjectReference` to anything.
+- `src/<Company>.<Product>.Infrastructure.Persistence` — EF Core (`<Product>DbContext`), one module
+  `Context` per module, entity configurations, batch helpers, and `AddPersistence`.
+- `src/<Company>.<Product>.Application.UseCases` — DTOs, FluentValidation, Mapster, handlers, and
+  `AddApplicationServices`.
+- `src/<Company>.<Product>.Api` — Minimal API (no controllers), authentication, rate limiting,
+  ProblemDetails, OpenTelemetry, and the implementations of ports that call infrastructure.
+
+## Commands
+
+```bash
+# Build (must run with zero warnings)
+dotnet build
+
+# Run tests
+dotnet test
+
+# Run tests with coverage (Microsoft.Testing.Platform + CodeCoverage)
+dotnet test --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml
+
+# Run a single test project
+dotnet test tests/<Company>.<Product>.Application.UseCases.Tests/
+
+# Run the API locally
+cd src/<Company>.<Product>.Api
+dotnet watch
+```
+
+## The core rule
+
+**Every class that opens real I/O (SQL, queue, HTTP, a vendor SDK) is a thin shell. The logic it needs
+lives in a separate pure class that unit-tests with no network, no database and no account.** The pure
+class returns domain types, never vendor/persistence types.
+
+Concretely in this service: `<Module>Handler` calls the port and logs/returns results; mapping,
+translation and index building are pure classes. The queue client, audit writer, and any SDK client are
+the shells.
+
+## Dependency graph and DI
+
+One dependency direction: `Domain` ← `Infrastructure.Persistence` ← `Application.UseCases` ← `Api`.
+`Api` also references `Infrastructure.Persistence` directly (composition root).
+
+Registration points:
+
+- `AddPersistence(IServiceCollection, IConfiguration)` — `Infrastructure.Persistence`
+- `AddApplicationServices(IServiceCollection)` — `Application.UseCases`
+- The rest (`AddAuthentication`, `AddRateLimiter`, `AddOpenTelemetry`, `AddProblemDetails`, queue and
+  provider extensions) — `Api/Program.cs`
+
+Lifetimes: handlers `Scoped`; `IQueueService`, `IAuditLogService`, channel, provider singletons;
+`BackgroundService`s are singletons.
+
+## Non-obvious decisions
+
+- **Thin I/O shells**: to keep the logic testable, every call to a real dependency is isolated. *Why:*
+  the shell is what you cannot test; the logic is what has bugs.
+- **No generic `IRepository<T>`**: we use one `Context` per module with hand-written queries. *Why:*
+  the query is the important part, and a generic interface hides the query shape.
+- **Normalization before enqueuing**: the API normalizes upstream payloads and writes a normalized
+  message to the queue. *Why:* the consumer cannot depend on upstream format; one place absorbs change.
+- **Queue contract versioned in the envelope**: breaking payload changes require a new queue name or an
+  explicit additive change. *Why:* consumers are separate deployables you do not control.
+- **`Channel<T>` bounded, `FullMode = Wait`, and drops counted**: we do not use `DropWrite`. *Why:*
+  `DropWrite` returns `true` when it discards, making the loss invisible.
+- **Native JWT (`AddJwtBearer`)**: we never write a JWT validator. *Why:* OIDC discovery, key rotation,
+  clock skew and algorithm checks are handled correctly by the framework.
+- **Deny by default**: `RequireAuthenticatedUser()` fallback, `.AllowAnonymous()` only on `/health` (and
+  any login that issues tokens). *Why:* endpoints added later are secure by accident.
+- **Custom authorization only for client id (403 vs 401 split).** *Why:* the framework expresses
+  authenticated, but not "issued to this specific client".
+- **Rate limiting uses the native `AddRateLimiter`, partitioned by client id when available; per
+  instance.** *Why:* reuse a tested primitive. Per-instance is documented as a known property.
+- **No CORS in a server-to-server API.** *Why:* CORS is a browser mechanism, not needed for server calls.
+- **EF bulk writes with `UseTempDB = true`, explicit transaction, wrapped in execution strategy.**
+  *Why:* matches the permission and retry semantics of SQL Server; none of these reproduce on SQLite.
+- **SQLite in-memory for EF tests (connection held open), not the EF `InMemory` provider.** *Why:*
+  SQLite is a relational engine; the EF `InMemory` provider ignores transactions, uniqueness, raw SQL
+  and many query behaviours.
+- **OpenTelemetry, no Serilog/classic Application Insights SDK.** *Why:* one distro captures traces,
+  metrics and `ILogger<T>` without a second sink, and aligns with the current Azure guidance.
+- **Telemetry instruments live in `Domain/Telemetry`, registered explicitly.** *Why:* the domain has no
+  dependencies; handlers in `Application.UseCases` must be able to reference the instruments without
+  referencing the SDK wiring.
+- **Business time zone is a fixed offset (`UTC-<XX:00>`) — never the OS zone.** *Why:* a time zone
+  rule change or a host region change must not alter parsed business timestamps.
+- **Secrets never in committed `appsettings.json`; `appsettings.Development.json` is gitignored and we
+  use `dotnet user-secrets` locally.** *Why:* removing a line from git does not un-leak it.
+
+## Conventions
+
+- .NET 10, C# 14, `Nullable enable`, `ImplicitUsings enable` (global).
+- Primary constructors in production code.
+- Minimal APIs — no controllers. Return `IResult` or a `Results<...>` union, never `IActionResult`.
+- `ProblemDetails` for every non-2xx response.
+- The API surface (`/openapi`, the UI) is enabled only via configuration (`OpenApi:Enabled`) and is
+  off by default.
+- Entity configuration lives in `Configurations/<Module>/`. No attributes on domain models.
+- Handlers live flat under `Features/` (no per-integration subfolder). One module = one endpoint group.
+- Unit tests cover pure logic, `WebApplicationFactory` covers endpoints/auth/rate limiting, EF tests
+  use SQLite in-memory.
+- `dotnet build` with **zero warnings** is part of "done".
+- Types in English. **Properties** follow <choose: upstream system or database> and this choice is
+  recorded here. (Do not let naming mix half-way.)
+
+## Project packages
+
+Take package versions from NuGet (latest stable aligned to `net10.0.x` at the time of scaffolding).
+The versions pinned in the reference implementation serve as a starting point, not a permanent lock
+unless the team decides otherwise.

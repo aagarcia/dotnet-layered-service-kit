@@ -1,0 +1,133 @@
+# CLAUDE.md — <Company>.<Product>
+
+Este archivo orienta a un agente o a un desarrollador nuevo en menos de dos minutos sobre qué es este
+service, cómo construirlo, las decisiones no obvias y las convenciones que mantienen juntas las capas.
+
+## Qué es
+
+`<Company>.<Product>` es un service HTTP construido con .NET 10 y el patrón "shell de I/O delgado +
+lógica testeable", con cuatro capas:
+
+- `src/<Company>.<Product>.Domain` — modelos POCO, enums e instrumentos de telemetría (`Meter` y
+  `ActivitySource`). Sin `ProjectReference` a nada.
+- `src/<Company>.<Product>.Infrastructure.Persistence` — EF Core (`<Product>DbContext`), un `Context`
+  por módulo, configuraciones de entidades, helpers por lotes y `AddPersistence`.
+- `src/<Company>.<Product>.Application.UseCases` — DTOs, FluentValidation, Mapster, handlers y
+  `AddApplicationServices`.
+- `src/<Company>.<Product>.Api` — Minimal API (sin controllers), autenticación, rate limiting,
+  ProblemDetails, OpenTelemetry y las implementaciones de los puertos que llaman a infraestructura.
+
+## Comandos
+
+```bash
+# Build (must run with zero warnings)
+dotnet build
+
+# Run tests
+dotnet test
+
+# Run tests with coverage (Microsoft.Testing.Platform + CodeCoverage)
+dotnet test --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml
+
+# Run a single test project
+dotnet test tests/<Company>.<Product>.Application.UseCases.Tests/
+
+# Run the API locally
+cd src/<Company>.<Product>.Api
+dotnet watch
+```
+
+## La regla central
+
+**Toda clase que abre I/O real (SQL, cola, HTTP, un SDK de proveedor) es un shell delgado. La lógica
+que necesita vive en una clase pura separada que se testea por unidad sin red, sin base de datos y sin
+cuenta.** La clase pura devuelve tipos de dominio, nunca tipos del proveedor o de la persistencia.
+
+Concretamente en este service: `<Module>Handler` llama al puerto y loguea/devuelve resultados; el
+mapping, la traducción y la construcción del índice son clases puras. El cliente de cola, el escritor
+del registro de auditoría y cualquier cliente de SDK son los shells.
+
+## Grafo de dependencias y DI
+
+Una sola dirección de dependencias: `Domain` ← `Infrastructure.Persistence` ← `Application.UseCases` ←
+`Api`. `Api` también referencia `Infrastructure.Persistence` directamente (raíz de composición).
+
+Puntos de registro:
+
+- `AddPersistence(IServiceCollection, IConfiguration)` — `Infrastructure.Persistence`
+- `AddApplicationServices(IServiceCollection)` — `Application.UseCases`
+- El resto (`AddAuthentication`, `AddRateLimiter`, `AddOpenTelemetry`, `AddProblemDetails`, las
+  extensiones de cola y de proveedor) — `Api/Program.cs`
+
+Tiempos de vida: handlers `Scoped`; `IQueueService`, `IAuditLogService`, canal y los singletons del
+proveedor; los `BackgroundService` son singletons.
+
+## Decisiones no obvias
+
+- **Shells de I/O delgados**: para mantener la lógica testeable, toda llamada a una dependencia real
+  está aislada. *Por qué:* el shell es lo que no puedes testear; la lógica es lo que tiene bugs.
+- **Sin `IRepository<T>` genérico**: usamos un `Context` por módulo con queries escritas a mano.
+  *Por qué:* la query es la parte importante, y una interfaz genérica esconde la forma de la query.
+- **Normalización antes de encolar**: la API normaliza los payloads de origen y escribe un mensaje
+  normalizado en la cola. *Por qué:* el consumidor no puede depender del formato de origen; un solo
+  lugar absorbe el cambio.
+- **Contrato de la cola versionado en el envelope**: un cambio incompatible del payload exige un
+  nombre de cola nuevo o un cambio aditivo explícito. *Por qué:* los consumidores son despliegues
+  separados que no controlas.
+- **`Channel<T>` acotado, `FullMode = Wait`, y las descartes contadas**: no usamos `DropWrite`. *Por
+  qué:* `DropWrite` devuelve `true` cuando descarta, y eso vuelve invisible la pérdida.
+- **JWT nativo (`AddJwtBearer`)**: nunca escribimos un validador de JWT. *Por qué:* el descubrimiento
+  OIDC, la rotación de llaves, el desfase del reloj y la validación de algoritmos los resuelve
+  correctamente el framework.
+- **Denegar por defecto**: fallback `RequireAuthenticatedUser()`, `.AllowAnonymous()` solo en
+  `/health` (y en cualquier login que emita tokens). *Por qué:* los endpoints que se agreguen después
+  quedan seguros por accidente.
+- **Autorización propia solo para el client id (separación 403 vs 401).** *Por qué:* el framework
+  expresa "autenticado", pero no "emitido a este cliente específico".
+- **El rate filtering usa `AddRateLimiter` nativo, particionado por client id cuando existe; por
+  instancia.** *Por qué:* reutilizar una primitiva ya probada. Por instancia está documentado como
+  una propiedad conocida.
+- **Sin CORS en una API de servidor a servidor.** *Por qué:* CORS es un mecanismo de navegador, no
+  hace falta para llamadas entre servidores.
+- **Escrituras bulk de EF con `UseTempDB = true`, transacción explícita, envueltas en una execution
+  strategy.** *Por qué:* coincide con la semántica de permisos y de reintentos de SQL Server; nada de
+  eso se reproduce en SQLite.
+- **SQLite in-memory para los tests de EF (conexión abierta), no el provider `InMemory` de EF.**
+  *Por qué:* SQLite es un motor relacional; el provider `InMemory` de EF ignora transacciones,
+  unicidad, SQL crudo y muchos comportamientos de las queries.
+- **OpenTelemetry, sin Serilog ni el SDK clásico de Application Insights.** *Por qué:* una sola distro
+  captura trazas, métricas e `ILogger<T>` sin un segundo sink, y va en línea con la guía actual de
+  Azure.
+- **Los instrumentos de telemetría viven en `Domain/Telemetry`, registrados explícitamente.** *Por
+  qué:* el dominio no tiene dependencias; los handlers en `Application.UseCases` deben poder
+  referenciar los instrumentos sin referenciar el cableado del SDK.
+- **La zona horaria del negocio es un offset fijo (`UTC-<XX:00>`) — nunca la del sistema
+  operativo.** *Por qué:* un cambio en la regla de una zona horaria o en la región del host no debe
+  alterar las marcas de tiempo del negocio ya parseadas.
+- **Los secretos nunca en un `appsettings.json` commiteado; `appsettings.Development.json` está en
+  .gitignore y usamos `dotnet user-secrets` en local.** *Por qué:* quitar una línea de git no
+  deshace la filtración.
+
+## Convenciones
+
+- .NET 10, C# 14, `Nullable enable`, `ImplicitUsings enable` (global).
+- Primary constructors en el código de producción.
+- Minimal APIs — sin controllers. Devuelve `IResult` o una unión `Results<...>`, nunca `IActionResult`.
+- `ProblemDetails` para toda respuesta que no sea 2xx.
+- La superficie de la API (`/openapi`, la UI) se habilita solo por configuración (`OpenApi:Enabled`) y
+  viene apagada por defecto.
+- La configuración de entidades vive en `Configurations/<Module>/`. Sin atributos en los modelos de
+  dominio.
+- Los handlers viven planos bajo `Features/` (sin subcarpeta por integración). Un módulo = un grupo de
+  endpoints.
+- Las pruebas unitarias cubren la lógica pura, `WebApplicationFactory` cubre endpoints/auth/rate
+  filtering, los tests de EF usan SQLite in-memory.
+- `dotnet build` con **cero warnings** es parte de "terminado".
+- Los tipos van en inglés. Las **propiedades** siguen <choose: upstream system or database> y esa
+  elección queda registrada aquí. (No dejes que el naming se mezcle a medias.)
+
+## Paquetes del proyecto
+
+Toma las versiones de los paquetes desde NuGet (la última estable alineada a `net10.0.x` en el momento
+del andamiaje). Las versiones fijadas en la implementación de referencia sirven como punto de partida,
+no como un bloqueo permanente, salvo que el equipo decida lo contrario.

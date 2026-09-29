@@ -1,0 +1,18 @@
+# Fusiona este fragmento con el .gitignore del repositorio.
+# El archivo de desarrollo local es el importante: appsettings.Development.json se versiona por
+# defecto en casi todas las plantillas, y un solo `git add .` publica una cadena de conexión real.
+
+bin/
+obj/
+.vs/
+TestResults/
+*.user
+*.userprefs
+*.log
+.env
+secrets.json
+
+# Overrides locales: nunca se versionan. Usa `dotnet user-secrets` (ver docs/DEPLOYMENT.md).
+appsettings.Development.json
+local.settings.json
+launchSettings.json

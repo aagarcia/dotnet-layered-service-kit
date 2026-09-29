@@ -1,0 +1,24 @@
+{
+  "name": "layered-service",
+  "description": "Build and review layered .NET 10 Minimal API services: 4-project dependency graph, thin I/O shells, ProblemDetails, native JWT + rate limiting, OpenTelemetry, and a production pitfalls catalog.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Alex Garcia",
+    "url": "https://github.com/aagarcia"
+  },
+  "license": "MIT",
+  "keywords": [
+    "dotnet",
+    "dotnet-10",
+    "minimal-api",
+    "architecture",
+    "layers",
+    "efcore",
+    "opentelemetry",
+    "jwt",
+    "rate-limiting",
+    "code-review"
+  ],
+  "homepage": "https://github.com/aagarcia/dotnet-layered-service-kit",
+  "repository": "https://github.com/aagarcia/dotnet-layered-service-kit"
+}

@@ -1,0 +1,48 @@
+<!--
+  Cópialo a la raíz del repositorio. Aplica a todos los proyectos que hay debajo, tanto src como
+  tests. Plantilla: reemplaza la versión del analizador por la última versión estable, y revisa
+  NuGet para el resto.
+-->
+<Project>
+
+  <PropertyGroup>
+    <LangVersion>14</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <!-- Las reglas de .editorconfig también aplican a `dotnet build`, así que IDE0005 (using sin usar)
+       falla el build. IDE0005 solo se reporta durante el build cuando se genera el archivo de
+       documentación XML; CS1591 (miembro público sin comentario XML) se silencia porque exigir XML
+       en cada miembro público no es una regla de este estándar.
+       Limpieza: ejecuta `dotnet format style` acotado al diagnóstico IDE0005. (Un doble guion no
+       puede aparecer dentro de un comentario XML, y por eso aquí el comando va sin su flag.) -->
+  <PropertyGroup>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+
+  <!-- Análisis estático en todos los proyectos del repositorio, src y tests. Una sola versión, que se actualiza aquí.
+       `0.0.0-PLACEHOLDER` es un marcador de posición, no una versión: reemplázalo por la última versión
+       estable (revisa NuGet) antes del primer restore. SÍ es semver bien formado - 0.0.0 con el tag
+       prerelease PLACEHOLDER - pero esa versión no está publicada, así que el restore falla con NU1102
+       (no encuentra el paquete) si te olvidas de reemplazarlo. De eso se trata: un fallo visible es
+       mejor que un analizador sin versión fijada en silencio. También mantiene este archivo como XML
+       válido; un literal como `Version="<latest-stable>"` pondría un `<` crudo dentro del valor de un
+       atributo. -->
+  <ItemGroup>
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="0.0.0-PLACEHOLDER">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Cada proyecto mantiene la misma versión con un Update en lugar de un segundo Include, para
+       que la versión del analizador viva en exactamente un lugar:
+  <ItemGroup>
+    <PackageReference Update="SonarAnalyzer.CSharp" Version="0.0.0-PLACEHOLDER" />
+  </ItemGroup>
+  -->
+
+</Project>

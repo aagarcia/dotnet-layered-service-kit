@@ -1,0 +1,9 @@
+root = true
+
+[*.cs]
+# Using sin usar: un warning en el IDE *y* en `dotnet build` (EnforceCodeStyleInBuild en
+# Directory.Build.props). Limpieza automática: dotnet format style --diagnostics IDE0005
+#
+# Mantén este archivo chico y aplicado. Un .editorconfig que nadie lee, con cuarenta severidades en
+# "suggestion", es peor que una sola regla que sí hace fallar el build.
+dotnet_diagnostic.IDE0005.severity = warning

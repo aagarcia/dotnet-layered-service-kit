@@ -1,0 +1,18 @@
+# Merge this fragment into the repository .gitignore.
+# The local development file is the important one: appsettings.Development.json is committed by
+# default in most templates, and one `git add .` publishes a real connection string.
+
+bin/
+obj/
+.vs/
+TestResults/
+*.user
+*.userprefs
+*.log
+.env
+secrets.json
+
+# Local overrides: never committed. Use `dotnet user-secrets` (see docs/DEPLOYMENT.md).
+appsettings.Development.json
+local.settings.json
+launchSettings.json
