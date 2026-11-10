@@ -76,12 +76,18 @@ Read `references/02-core-rule-thin-io-shell.md` before writing any new integrati
 23. Fixed-offset business time zone, never the OS zone.
 24. xUnit v3 on Microsoft.Testing.Platform; EF tests on SQLite in-memory with the connection held open.
 25. `dotnet build` with zero warnings before you call it done.
+26. Every endpoint, whatever the verb (GET, POST, PUT, PATCH, DELETE), gets an explicit, reasoned approach decision stated to the developer before coding — EF Core by default; raw SQL/Dapper, bulk, enqueue-and-202 or CQRS only with a stated reason (`references/16-choosing-data-access.md`).
+27. Redis and caches are an option, never a default. When cache, Redis or repeated slow reads come up, give the developer a verdict (viable / viable with conditions / not recommended) and where it fits; the developer decides (`references/17-caching-and-redis.md`).
 
 ## Workflow
 
 1. **Read the requirement, propose the design before writing code.** State the layers, the module
    folders, the ports you need, the HTTP contract (routes, status codes, payloads), and which
    integrations are push or pull. Get the shape agreed; the code is mechanical after that.
+   **For every endpoint, whatever the verb, apply `references/16-choosing-data-access.md` now:**
+   classify the operation, gather the facts, then tell the developer the plan — what you will do, the
+   approach (EF Core, `ExecuteUpdate`, bulk, enqueue + 202, `SqlQuery<T>`, Dapper or CQRS), why, what you
+   rejected and the cost — before writing the handler.
 2. **Scaffold with `references/15-checklists.md`.** Four projects, `.slnx`, `Directory.Build.props`,
    `global.json`, `.editorconfig`, the two `DependencyInjection.cs`, the empty `Program.cs`, the
    telemetry class.
@@ -93,6 +99,8 @@ Read `references/02-core-rule-thin-io-shell.md` before writing any new integrati
    `references/13-repo-documentation.md`.
 6. **Walk `references/14-production-pitfalls.md`** against what you built. Every one of those lessons
    was paid for; check each one explicitly rather than trusting that you avoided them.
+7. **Close with a clean build:** `dotnet build` with zero warnings, and remove unused usings with
+   `dotnet format style --diagnostics IDE0005` (see `references/12-testing-and-quality.md`).
 
 ## Reference index
 
@@ -115,3 +123,5 @@ Read the file when the situation matches — do not read the whole set.
 | `references/13-repo-documentation.md` | Writing or reviewing the repo's docs |
 | `references/14-production-pitfalls.md` | **Before merging, and whenever something behaves differently in production than in tests** |
 | `references/15-checklists.md` | Following a task end to end: new service, new endpoint, new integration, pre-merge |
+| `references/17-caching-and-redis.md` | **Cache, Redis, repeated or slow reads**: whether to cache, which kind, where, and a verdict for the developer |
+| `references/16-choosing-data-access.md` | **Any endpoint, any verb (GET/POST/PUT/PATCH/DELETE)**: choosing EF Core vs raw SQL/Dapper vs enqueue vs CQRS and telling the developer the plan and why |

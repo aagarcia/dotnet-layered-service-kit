@@ -83,6 +83,8 @@ nueva.
 24. xUnit v3 sobre Microsoft.Testing.Platform; tests de EF sobre SQLite in-memory con la conexión
     abierta.
 25. `dotnet build` con cero warnings antes de decir que está terminado.
+26. Todo endpoint, sin importar el verbo (GET, POST, PUT, PATCH, DELETE), recibe una decisión de enfoque explícita y razonada, comunicada al developer antes de programar — EF Core por defecto; SQL crudo/Dapper, bulk, encolar con 202 o CQRS solo con una razón declarada (`references/16-choosing-data-access.md`).
+27. Redis y las cachés son una opción, nunca un default. Cuando surja caché, Redis o lecturas lentas repetidas, dale al developer un veredicto (viable / viable con condiciones / no recomendado) y dónde encaja; la decisión es del developer (`references/17-caching-and-redis.md`).
 
 ## Flujo de trabajo
 
@@ -90,6 +92,10 @@ nueva.
    carpetas de los módulos, los puertos que hacen falta, el contrato HTTP (rutas, códigos de estado,
    payloads) y qué integraciones son push y cuáles pull. Acuerda la forma; después el código es
    mecánico.
+   **Para todo endpoint, sin importar el verbo, aplica ahora `references/16-choosing-data-access.md`:**
+   clasifica la operación, reúne los hechos y luego dile al developer el plan — qué vas a hacer, el
+   enfoque (EF Core, `ExecuteUpdate`, bulk, encolar + 202, `SqlQuery<T>`, Dapper o CQRS), por qué, qué
+   descartaste y el costo — antes de escribir el handler.
 2. **Andamiaje con `references/15-checklists.md`.** Cuatro proyectos, `.slnx`,
    `Directory.Build.props`, `global.json`, `.editorconfig`, los dos `DependencyInjection.cs`, el
    `Program.cs` vacío, la clase de telemetría.
@@ -101,6 +107,8 @@ nueva.
    `docs/API-CONTRATO.md`. Ver `references/13-repo-documentation.md`.
 6. **Recorrer `references/14-production-pitfalls.md`** sobre lo que construiste. Cada una de esas
    lecciones costó plata; revísalas una por una en vez de confiar en que las evitaste por instinto.
+7. **Cerrar con un build limpio:** `dotnet build` con cero warnings, y elimina los usings sin usar con
+   `dotnet format style --diagnostics IDE0005` (ver `references/12-testing-and-quality.md`).
 
 ## Índice de references
 
@@ -123,3 +131,5 @@ Lee el archivo cuando la situación coincida — no leas el conjunto entero.
 | `references/13-repo-documentation.md` | Al escribir o revisar la documentación del repo |
 | `references/14-production-pitfalls.md` | **Antes de mergear, y siempre que algo se comporte distinto en producción que en los tests** |
 | `references/15-checklists.md` | Para seguir una tarea de punta a punta: service nuevo, endpoint nuevo, integración nueva, pre-merge |
+| `references/17-caching-and-redis.md` | **Caché, Redis, lecturas repetidas o lentas**: si cachear, qué tipo, dónde, y un veredicto para el developer |
+| `references/16-choosing-data-access.md` | **Cualquier endpoint, cualquier verbo (GET/POST/PUT/PATCH/DELETE)**: elegir EF Core vs SQL crudo/Dapper vs encolar vs CQRS y comunicar al developer el plan y por qué |

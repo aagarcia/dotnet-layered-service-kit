@@ -30,7 +30,7 @@ estén presentes.
    `Domain/Telemetry`.
 4. **Persistencia** — un `DbContext`, un `IEntityTypeConfiguration<T>` por entidad, `Contexts` por
    módulo (sin `IRepository<T>` genérico), `UseTempDB` + transacción + execution strategy para las
-   escrituras bulk, `ValueGeneratedOnAdd` para los defaults de SQL.
+   escrituras bulk, `ValueGeneratedOnAdd` para los defaults de SQL. Cada endpoint (cualquier verbo) tiene una decisión de enfoque declarada. Lecturas: `AsNoTracking()` + proyección a DTO; `PUT`/`PATCH` sobre datos compartidos llevan token de concurrencia; toda caché/Redis tiene un veredicto declarado, un TTL, tenant/usuario en la llave e invalidación posterior al commit (`references/17-caching-and-redis.md`); todo SQL crudo/Dapper/CQRS tiene una razón declarada (`references/16-choosing-data-access.md`), va parametrizado y detrás de una shell delgada.
 5. **Application** — handlers planos en `Features/`, devuelven `OperationResultDto`, validadores
    auto-registrados, Mapster por módulo, primary constructors.
 6. **API** — solo Minimal APIs (sin controllers), `TypedResults`, `ValidationFilter<T>`,
@@ -50,7 +50,7 @@ estén presentes.
     del negocio.
 12. **Pruebas y calidad** — xUnit v3 sobre Microsoft.Testing.Platform, fakes para los puertos, tests de
     EF sobre SQLite in-memory con la conexión abierta, cobertura con CodeCoverage, analizador
-    configurado, **cero warnings**.
+    configurado, **cero warnings** (sin usings sin usar, IDE0005).
 13. **Documentación** — `CLAUDE.md`, `docs/ARCHITECTURE.md`, `docs/API-CONTRACT.md`,
     `docs/DEPLOYMENT.md`, `docs/TROUBLESHOOTING.md`, y las decisiones no obvias con su *por qué*.
 14. **Anti-patrones de producción** - revisa los 21 puntos de

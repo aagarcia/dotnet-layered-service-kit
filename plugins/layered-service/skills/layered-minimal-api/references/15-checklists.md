@@ -67,6 +67,10 @@ dotnet add src/Contoso.Orders.Api package OpenTelemetry.Instrumentation.Runtime
 dotnet add src/Contoso.Orders.Api package Scalar.AspNetCore
 dotnet add src/Contoso.Orders.Api package Azure.Storage.Queues                                   # only with the async-ingestion pattern on Azure Queue Storage (references/08)
 
+# Optional cache (only if references/17 justified one)
+dotnet add src/Contoso.Orders.Api package Microsoft.Extensions.Caching.Hybrid
+dotnet add src/Contoso.Orders.Api package Microsoft.Extensions.Caching.StackExchangeRedis        # Redis second level
+
 # Tests
 dotnet add tests/Contoso.Orders.Api.Tests package Microsoft.AspNetCore.Mvc.Testing
 ```

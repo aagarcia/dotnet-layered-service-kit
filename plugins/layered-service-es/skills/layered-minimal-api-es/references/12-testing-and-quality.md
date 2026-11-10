@@ -212,12 +212,13 @@ cuando `OpenApi:Enabled` es false.
   <!-- Análisis estático en todos los proyectos. `0.0.0-PLACEHOLDER` es un marcador de posición,
        no una versión: reemplázalo por la release estable actual (mira NuGet) antes del primer
        restore. SÍ es semver bien formado - 0.0.0 con el tag prerelease PLACEHOLDER - pero esa
-       versión no está publicada, así que el restore falla con NU1102 si te olvidas. De eso se
+       versión no está publicada, así que el restore falla con NU1102 si te olvidas (los corchetes lo vuelven versión
+       exacta, no mínimo; sin ellos NuGet resuelve una mayor con solo NU1603). De eso se
        trata: un fallo visible es mejor que un analizador sin versión fijada en silencio. También
        mantiene este archivo como XML válido - un literal como Version="<latest-stable>" pondría un
        `<` crudo dentro del valor de un atributo. Se sube aquí únicamente; los demás proyectos lo
        actualizan con Update. -->
-  <PackageReference Include="SonarAnalyzer.CSharp" Version="0.0.0-PLACEHOLDER">
+  <PackageReference Include="SonarAnalyzer.CSharp" Version="[0.0.0-PLACEHOLDER]">
     <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     <PrivateAssets>all</PrivateAssets>
   </PackageReference>

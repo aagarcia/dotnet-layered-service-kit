@@ -9,8 +9,8 @@ Estándar reutilizable para **crear y revisar services .NET 10 Minimal API en ca
 
 Se distribuye como **plugin de Claude Code**: una skill que enseña a un agente (o a una persona) cómo
 crear, implementar, testear y documentar un service HTTP en capas, más un agente de solo lectura que
-audita un service existente contra el mismo estándar. Cada regla dice *por qué* existe, y el último
-archivo de references es un catálogo síntoma → causa → solución de problemas que solo aparecen en
+audita un service existente contra el mismo estándar. Cada regla dice *por qué* existe, y el archivo
+de referencia 14 es un catálogo síntoma → causa → solución de problemas que solo aparecen en
 producción.
 
 [English →](README.md)
@@ -47,8 +47,8 @@ entran, porque el service es su dueño. Roadmap: estándar de worker, más adela
 | Ruta | Qué te da |
 |---|---|
 | `plugins/layered-service-es/skills/layered-minimal-api-es/SKILL.md` | Las instrucciones de trabajo: arquitectura, reglas de oro, flujo, índice |
-| `plugins/layered-service-es/skills/layered-minimal-api-es/references/` | 15 archivos por tema: capas, regla central, dominio, persistencia, casos de uso, API, seguridad, ingesta asíncrona, SDKs de terceros, observabilidad, configuración, testing, docs, **pitfalls de producción**, checklists |
-| `plugins/layered-service-es/skills/layered-minimal-api-es/templates/` | 11 archivos listos para copiar: `Program.cs`, los dos `DependencyInjection.cs`, `ValidationFilter.cs`, `ModuleEndpoints.cs`, `GlobalExceptionHandler.cs`, `ObservabilityExtensions.cs`, `Directory.Build.props`, `global.json`, `.editorconfig`, fragmento de `.gitignore`, `CLAUDE.md.template` |
+| `plugins/layered-service-es/skills/layered-minimal-api-es/references/` | 17 archivos por tema: capas, regla central, dominio, persistencia, casos de uso, API, seguridad, ingesta asíncrona, SDKs de terceros, observabilidad, configuración, testing, docs, **pitfalls de producción**, checklists, **decisión de acceso a datos (EF Core / Dapper / CQRS)**, **caché y Redis** |
+| `plugins/layered-service-es/skills/layered-minimal-api-es/templates/` | 14 archivos listos para copiar: `Program.cs`, los dos `DependencyInjection.cs` (`Application.` y `Persistence.`), `ValidationFilter.cs`, `ModuleEndpoints.cs`, `GlobalExceptionHandler.cs`, `ObservabilityExtensions.cs`, `Directory.Build.props`, `global.json`, `.editorconfig`, fragmento de `.gitignore`, `CLAUDE.md.template`, más el par opcional de caché `CachingExtensions.cs` y `CachedOrderStatusReader.cs` (HybridCache + Redis) |
 | `plugins/layered-service-es/agents/service-architecture-reviewer-es.md` | Agente de auditoría de solo lectura; entrega hallazgos por severidad con evidencia `archivo:línea` |
 | `plugins/layered-service/…` | El mismo contenido en inglés, instalable en paralelo |
 
@@ -57,6 +57,36 @@ Los plugins inglés y español tienen **nombres de skill y agente distintos**
 `service-architecture-reviewer-es`) para que ambos se puedan instalar a la vez. Los **nombres de
 archivo** de `references/` y `templates/` son idénticos en las dos versiones, así que puedes
 diffearlos o enlazarlos si prefieres.
+
+### Los 17 archivos de referencia
+
+| # | Archivo | Cubre |
+|---|---|---|
+| 01 | `layers-and-dependencies` | Los cuatro proyectos, dirección de dependencias, `.slnx`, antipatrones |
+| 02 | `core-rule-thin-io-shell` | El I/O queda delgado; la lógica vive en clases puras y testeables |
+| 03 | `domain` | Modelos planos, enums, instrumentos de telemetría |
+| 04 | `persistence-efcore` | EF Core, DbContext, configuración de entidades, escrituras por lotes |
+| 05 | `application-usecases` | DTOs, FluentValidation, Mapster, handlers |
+| 06 | `api-presentation` | Endpoints Minimal API, `ProblemDetails`, filtro de validación |
+| 07 | `security-and-rate-limiting` | JWT bearer, autorización, `AddRateLimiter` |
+| 08 | `async-ingestion-202` | Validar, normalizar, encolar y responder `202 Accepted` |
+| 09 | `third-party-sdks` | Envolver SDKs de terceros tras shells delgados |
+| 10 | `observability` | Trazas, métricas y logs con OpenTelemetry |
+| 11 | `configuration` | Patrón Options, secretos, zona horaria del negocio |
+| 12 | `testing-and-quality` | Tests unitarios/integración/EF, analizadores, cero warnings |
+| 13 | `repo-documentation` | Qué documentación lleva el repo de un service |
+| 14 | `production-pitfalls` | Catálogo síntoma → causa → solución |
+| 15 | `checklists` | Paquetes por proyecto y checklists de revisión |
+| 16 | `choosing-data-access` | Para cualquier endpoint y verbo (GET/POST/PUT/PATCH/DELETE): el plan, y EF Core vs SQL crudo/Dapper vs encolar con 202 vs CQRS con el porqué, lo descartado y el costo |
+| 17 | `caching-and-redis` | Redis es una opción, nunca un default: si cachear, qué tipo, dónde, y un veredicto de viabilidad; decide el developer |
+
+### El agente revisor
+
+`service-architecture-reviewer-es` es de **solo lectura** (herramientas: `Read`, `Grep`, `Glob` y `Bash`
+para `dotnet build`, `dotnet test`, `git log`/`git diff`/`git status`). Apúntalo a un repo de service y pídele una auditoría: revisa
+capas, shells de I/O delgados, `ProblemDetails`, JWT y rate limiting, OpenTelemetry, testing, calidad
+de build y los pitfalls de producción, y entrega hallazgos por severidad con evidencia `archivo:línea`.
+Nunca edita archivos.
 
 ## Instalación
 
@@ -100,8 +130,13 @@ cp plugins/layered-service-es/skills/layered-minimal-api-es/templates/Program.cs
    <proyecto>/src/<Company>.<Product>.Api/Program.cs
 ```
 
-Todas las plantillas traen placeholders `<Company>`, `<Product>` y `<Module>`. Reemplázalos antes de
-compilar.
+Reemplaza los placeholders `<Company>`, `<Product>` y `<Module>` donde la plantilla los tenga, y adapta
+los namespaces de ejemplo `Contoso.Orders`, antes de compilar.
+
+**Las versiones de paquetes no se fijan a propósito.** `Directory.Build.props` trae
+`SonarAnalyzer.CSharp` en `0.0.0-PLACEHOLDER`, así que reemplázalo por la
+versión estable actual de NuGet, solo en ese archivo, antes de hacer restore (la plantilla usa un rango exacto, `[0.0.0-PLACEHOLDER]`, así que el restore falla hasta que lo hagas). Al empezar un service, verifica en NuGet los
+demás nombres de paquete de `references/15-checklists.md`.
 
 ## El dominio de ejemplo
 
@@ -140,7 +175,7 @@ Dos decisiones no le corresponden al estándar. Elige una por repo y escríbela 
    zona del sistema operativo, o dev y prod discreparán.
 
 Para fijar una versión concreta, añade el marketplace en un tag:
-`/plugin marketplace add https://github.com/aagarcia/dotnet-layered-service-kit.git#v0.1.0`.
+`/plugin marketplace add https://github.com/aagarcia/dotnet-layered-service-kit.git#v0.2.0`.
 Desde un clon local también funciona `/plugin marketplace add /ruta/a/dotnet-layered-service-kit`.
 
 ## Versionado
