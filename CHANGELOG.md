@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Planned
+
+- Worker standard (queue consumers and `BackgroundService` processing), as a separate plugin.
+
+## [0.2.0] - 2026-11-09
+
 ### Added
 
 - Issue templates, pull request template and a collaboration status note in the READMEs.
@@ -32,10 +38,6 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - `SonarAnalyzer.CSharp` placeholder is now the exact range `[0.0.0-PLACEHOLDER]`, so restore really fails
   with NU1102 as documented (a bare version is only a minimum and resolved with a NU1603 warning).
 
-### Planned
-
-- Worker standard (queue consumers and `BackgroundService` processing), as a separate plugin.
-
 ## [0.1.0] - 2026-09-29
 
 First public release.
@@ -58,5 +60,6 @@ First public release.
   plugins can be installed side by side.
 - `dotnet-layered-service-kit` marketplace exposing both plugins.
 
-[Unreleased]: https://github.com/aagarcia/dotnet-layered-service-kit/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/aagarcia/dotnet-layered-service-kit/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/aagarcia/dotnet-layered-service-kit/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/aagarcia/dotnet-layered-service-kit/releases/tag/v0.1.0

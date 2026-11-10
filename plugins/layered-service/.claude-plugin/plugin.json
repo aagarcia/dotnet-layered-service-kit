@@ -1,7 +1,7 @@
 {
   "name": "layered-service",
   "description": "Build and review layered .NET 10 Minimal API services: 4-project dependency graph, thin I/O shells, ProblemDetails, native JWT + rate limiting, OpenTelemetry, and a production pitfalls catalog.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": {
     "name": "Alex Garcia",
     "url": "https://github.com/aagarcia"

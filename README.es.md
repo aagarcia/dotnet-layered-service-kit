@@ -175,7 +175,7 @@ Dos decisiones no le corresponden al estándar. Elige una por repo y escríbela 
    zona del sistema operativo, o dev y prod discreparán.
 
 Para fijar una versión concreta, añade el marketplace en un tag:
-`/plugin marketplace add https://github.com/aagarcia/dotnet-layered-service-kit.git#v0.1.0`.
+`/plugin marketplace add https://github.com/aagarcia/dotnet-layered-service-kit.git#v0.2.0`.
 Desde un clon local también funciona `/plugin marketplace add /ruta/a/dotnet-layered-service-kit`.
 
 ## Versionado

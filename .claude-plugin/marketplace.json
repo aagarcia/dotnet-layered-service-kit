@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Standard for building and reviewing layered .NET 10 Minimal API services, in English and Spanish.",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "layered-service",
       "source": "./plugins/layered-service",
       "description": "Build and review layered .NET 10 Minimal API services: 4-project dependency graph, thin I/O shells, ProblemDetails, native JWT + rate limiting, OpenTelemetry, and a production pitfalls catalog.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "Alex Garcia",
         "url": "https://github.com/aagarcia"
@@ -37,7 +37,7 @@
       "name": "layered-service-es",
       "source": "./plugins/layered-service-es",
       "description": "Estándar para crear y revisar services .NET 10 Minimal API en capas: grafo de 4 proyectos, shells de I/O delgados, ProblemDetails, JWT nativo y rate limiting, OpenTelemetry y catálogo de pitfalls de producción.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "Alex Garcia",
         "url": "https://github.com/aagarcia"

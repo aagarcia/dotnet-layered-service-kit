@@ -169,7 +169,7 @@ Two decisions are not the standard's to make. Pick one per repo and write it dow
    operating system's zone, or dev and prod disagree.
 
 To pin a specific release, add the marketplace at a tag:
-`/plugin marketplace add https://github.com/aagarcia/dotnet-layered-service-kit.git#v0.1.0`.
+`/plugin marketplace add https://github.com/aagarcia/dotnet-layered-service-kit.git#v0.2.0`.
 From a local clone, `/plugin marketplace add /path/to/dotnet-layered-service-kit` works too.
 
 ## Versioning
