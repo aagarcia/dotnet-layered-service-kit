@@ -9,7 +9,7 @@ A reusable standard for **building and reviewing layered .NET 10 Minimal API ser
 
 It ships as a **Claude Code plugin**: one skill that teaches an agent (or a person) how to scaffold,
 implement, test and document a layered HTTP service, plus one read-only agent that audits an existing
-service against the same standard. Every rule states *why* it exists, and the last reference file is a
+service against the same standard. Every rule states *why* it exists, and reference 14 is a
 symptom → cause → fix catalog of problems that only show up in production.
 
 [Español →](README.es.md)
@@ -46,8 +46,8 @@ them. Roadmap: worker standard, coming later.)
 | Path | What it gives you |
 |---|---|
 | `plugins/layered-service/skills/layered-minimal-api/SKILL.md` | The operating instructions: architecture, golden rules, workflow, index |
-| `plugins/layered-service/skills/layered-minimal-api/references/` | 15 topic files: layers, the core rule, domain, persistence, use cases, API, security, async ingestion, third-party SDKs, observability, configuration, testing, docs, **production pitfalls**, checklists |
-| `plugins/layered-service/skills/layered-minimal-api/templates/` | 11 files ready to copy: `Program.cs`, the two `DependencyInjection.cs`, `ValidationFilter.cs`, `ModuleEndpoints.cs`, `GlobalExceptionHandler.cs`, `ObservabilityExtensions.cs`, `Directory.Build.props`, `global.json`, `.editorconfig`, `.gitignore` fragment, `CLAUDE.md.template` |
+| `plugins/layered-service/skills/layered-minimal-api/references/` | 17 topic files: layers, the core rule, domain, persistence, use cases, API, security, async ingestion, third-party SDKs, observability, configuration, testing, docs, **production pitfalls**, checklists, **data-access decision (EF Core / Dapper / CQRS)**, **caching and Redis** |
+| `plugins/layered-service/skills/layered-minimal-api/templates/` | 14 files ready to copy: `Program.cs`, the two `DependencyInjection.cs` (`Application.` and `Persistence.`), `ValidationFilter.cs`, `ModuleEndpoints.cs`, `GlobalExceptionHandler.cs`, `ObservabilityExtensions.cs`, `Directory.Build.props`, `global.json`, `.editorconfig`, `.gitignore` fragment, `CLAUDE.md.template`, plus the optional cache pair `CachingExtensions.cs` and `CachedOrderStatusReader.cs` (HybridCache + Redis) |
 | `plugins/layered-service/agents/service-architecture-reviewer.md` | Read-only audit agent; outputs findings by severity with `file:line` evidence |
 | `plugins/layered-service-es/…` | The same content in Spanish, installable side by side |
 
@@ -55,6 +55,35 @@ The English and Spanish plugins have **different skill and agent names** (`layer
 `layered-minimal-api-es`, `service-architecture-reviewer` vs `service-architecture-reviewer-es`) so both
 can be installed at once. The `references/` and `templates/` **file names are identical** in both, so
 you can diff them or symlink them if you prefer.
+
+### The 17 reference files
+
+| # | File | Covers |
+|---|---|---|
+| 01 | `layers-and-dependencies` | The four projects, dependency direction, `.slnx`, anti-patterns |
+| 02 | `core-rule-thin-io-shell` | I/O stays thin; logic lives in pure, testable classes |
+| 03 | `domain` | Plain models, enums, telemetry instruments |
+| 04 | `persistence-efcore` | EF Core, DbContext, entity configuration, bulk writes |
+| 05 | `application-usecases` | DTOs, FluentValidation, Mapster, handlers |
+| 06 | `api-presentation` | Minimal API endpoints, `ProblemDetails`, validation filter |
+| 07 | `security-and-rate-limiting` | JWT bearer, authorization, `AddRateLimiter` |
+| 08 | `async-ingestion-202` | Validate, normalize, enqueue, answer `202 Accepted` |
+| 09 | `third-party-sdks` | Wrapping vendor SDKs behind thin shells |
+| 10 | `observability` | OpenTelemetry traces, metrics and logs |
+| 11 | `configuration` | Options pattern, secrets, business time zone |
+| 12 | `testing-and-quality` | Unit/integration/EF tests, analyzers, zero warnings |
+| 13 | `repo-documentation` | What docs a service repo carries |
+| 14 | `production-pitfalls` | Symptom → cause → fix catalog |
+| 15 | `checklists` | Per-project package sets and review checklists |
+| 16 | `choosing-data-access` | For any endpoint and verb (GET/POST/PUT/PATCH/DELETE): the plan, and EF Core vs raw SQL/Dapper vs enqueue-and-202 vs CQRS with why, rejected options and cost |
+| 17 | `caching-and-redis` | Redis is an option, never a default: whether to cache, which kind, where, and a viability verdict; the developer decides |
+
+### The reviewer agent
+
+`service-architecture-reviewer` is **read-only** (tools: `Read`, `Grep`, `Glob`, `Bash` for
+`dotnet build`, `dotnet test`, `git log`/`git diff`/`git status`). Point it at a service repo and ask for an audit; it checks layers,
+thin I/O shells, `ProblemDetails`, JWT and rate limiting, OpenTelemetry, testing, build quality and the
+production pitfalls, and reports findings by severity with `file:line` evidence. It never edits files.
 
 ## Install
 
@@ -98,8 +127,13 @@ cp plugins/layered-service/skills/layered-minimal-api/templates/Program.cs \
    <project>/src/<Company>.<Product>.Api/Program.cs
 ```
 
-Every template carries `<Company>`, `<Product>` and `<Module>` placeholders. Replace them before you
-build.
+Replace the `<Company>`, `<Product>` and `<Module>` placeholders where a template has them, and adapt
+the `Contoso.Orders` example namespaces, before you build.
+
+**Package versions are deliberately not pinned.** `Directory.Build.props` ships
+`SonarAnalyzer.CSharp` at `0.0.0-PLACEHOLDER`, so replace it with the current
+stable version from NuGet, in that one file only, before restoring (the template uses an exact range, `[0.0.0-PLACEHOLDER]`, so restore fails until you do). Check the other package names in
+`references/15-checklists.md` against NuGet when you start a service.
 
 ## The example domain
 

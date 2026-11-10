@@ -210,11 +210,12 @@ with `Retry-After`, `/health` returning 200 anonymously, and `/openapi/v1.json` 
   <!-- Static analysis in every project. `0.0.0-PLACEHOLDER` is a placeholder, not a version:
        replace it with the current stable release (check NuGet) before the first restore. It IS
        well-formed semver - 0.0.0 with the pre-release tag PLACEHOLDER - but no such version is
-       published, so restore fails with NU1102 if you forget. That is the point: a loud failure
+       published, so restore fails with NU1102 if you forget (the square brackets make it an exact
+       version, not a minimum; without them NuGet resolves a higher one with only NU1603). That is the point: a loud failure
        beats a silently unpinned analyzer. It also keeps this file valid XML - a literal such as
        Version="<latest-stable>" would put a raw `<` inside an attribute value. Bump it here only;
        the other projects Update it. -->
-  <PackageReference Include="SonarAnalyzer.CSharp" Version="0.0.0-PLACEHOLDER">
+  <PackageReference Include="SonarAnalyzer.CSharp" Version="[0.0.0-PLACEHOLDER]">
     <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     <PrivateAssets>all</PrivateAssets>
   </PackageReference>

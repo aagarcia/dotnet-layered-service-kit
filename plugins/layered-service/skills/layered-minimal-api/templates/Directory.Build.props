@@ -26,11 +26,12 @@
        `0.0.0-PLACEHOLDER` is a placeholder, not a version: replace it with the current stable release
        (check NuGet) before the first restore. It IS well-formed semver - 0.0.0 with the pre-release tag
        PLACEHOLDER - but no such version is published, so restore fails with NU1102 (unable to find the
-       package) if you forget to replace it. That is the point: a loud failure beats a silently unpinned
+       package) if you forget to replace it. The square brackets make it an exact version, not a
+       minimum; without them NuGet would resolve a higher version with only a NU1603 warning. That is the point: a loud failure beats a silently unpinned
        analyzer. It also keeps this file valid XML; a literal such as `Version="<latest-stable>"` would
        put a raw `<` inside an attribute value. -->
   <ItemGroup>
-    <PackageReference Include="SonarAnalyzer.CSharp" Version="0.0.0-PLACEHOLDER">
+    <PackageReference Include="SonarAnalyzer.CSharp" Version="[0.0.0-PLACEHOLDER]">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
@@ -39,7 +40,7 @@
   <!-- Each project keeps the same version with an Update instead of a second Include, so the
        analyzer version lives in exactly one place:
   <ItemGroup>
-    <PackageReference Update="SonarAnalyzer.CSharp" Version="0.0.0-PLACEHOLDER" />
+    <PackageReference Update="SonarAnalyzer.CSharp" Version="[0.0.0-PLACEHOLDER]" />
   </ItemGroup>
   -->
 
